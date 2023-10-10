@@ -36,5 +36,5 @@ jobs:
         uses: TheDoctor0/zip-release@0.7.1
         with:
           # Filename for archive
-          filename: 'release v0.4.zip' # default is release.zip
+          filename: 'release_v0.4.zip' # default is release.zip
           type: zip # optional, default is zip
