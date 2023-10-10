@@ -1,4 +1,4 @@
-# Default Minus Minus v0.2 for release 1.4.2
+# Default Minus Minus v0.5 for release 1.4.2
 
 Dual Universe Custom Flight Script
 
