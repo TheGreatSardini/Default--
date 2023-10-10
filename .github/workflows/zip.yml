@@ -44,4 +44,5 @@ jobs:
         with:
           artifacts: "release.zip"
           tag: "v0.4"
+          commit: main
           token: ${{ secrets.GITHUB_TOKEN }}
