@@ -122,11 +122,16 @@ function WidgetsPlusPlusCustom.new(core, unit, DB, antigrav, warpdrive, shield, 
     self.draggable = false  --allow widget to be dragged
     self.fixed = true  --prevent widget from going over others
     self.title = nil
+    self.scale = 1
     return self
 end
 
 function WidgetsPlusPlusCustom.getSize(self) --returns the svg size
     return self.SVGSize
+end
+
+function WidgetsPlusPlusCustom.getScale(self) --returns the svg Scale
+    return self.scale
 end
 
 function WidgetsPlusPlusCustom.getName(self) --returns the widget name
@@ -215,12 +220,12 @@ end
 function WidgetsPlusPlusCustom.SVG_Update(self)
     delay = delay + 1 <= 60 and delay + 1 or 60
     if delay >= 60 then
-        local WTC = P.MS.WIDGET_TEXT_COLOR.value
-        local BBC = P.MS.BUTTON_BORDER_COLOR.value
-        local BC = P.MS.BUTTON_COLOR.value
-        local WC = P.MS.WN_COLOR.value --
-        local AC = P.MS.WIDGET_ANIM_COLOR.value
-        local FC = P.MS.WIDGET_FIXED_COLOR.value
+        local WTC = P.MS.wTC.value --WIDGET_TEXT_COLOR
+        local BBC = P.MS.BBC.value --BUTTON_BORDER_COLOR
+        local BC = P.MS.BC.value --BUTTON_COLOR
+        local WC = P.MS.WC.value --WN_COLOR
+        local AC = P.MS.wAC.value --WIDGET_ANIM_COLOR
+        local FC = P.MS.WFC.value --WIDGET_FIXED_COLOR
     
         local deg2px = self.height / self.vFov
         local near = 0.1
@@ -354,7 +359,7 @@ function WidgetsPlusPlusCustom.SVG_Update(self)
             local destName = pName
             local destPos = {pCx, pCy, pCz}
             local bf = function() return function()
-                                    DUSystem.print('Detination locked on: '..destName)
+                                    DUDUSystem.print('Detination locked on: '..destName)
                                     DUSystem.setWaypoint('::pos{0,0,'..pCx..','..pCy..','..pCz..'}')
                                     --P.TP.Destination.value = destPos
                                     windowsShow()
@@ -410,7 +415,6 @@ function WidgetsPlusPlusCustom.SVG_Update(self)
             projection2D()
             local fop = 1
     
-            --DUSystem.print(op)
             if sz < 1 and sPX > 0 and sPX < self.width and sPY > 0  and sPY < self.height and dist < 400000 and pIndex == entry.bodyId then
                 local size = atan(pRadius/2, dist) * (self.width / tan(rad(self.hFov * 0.5)))
                 if dist > Helios[pIndex].radius/2 then fop = 0.5 end
@@ -427,4 +431,5 @@ function WidgetsPlusPlusCustom.SVG_Update(self)
         SVG[SVGind] = '</svg>'
         return concat(SVG)
     end
+    return ""
 end

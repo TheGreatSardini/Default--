@@ -36,7 +36,7 @@ jobs:
         uses: TheDoctor0/zip-release@0.7.1
         with:
           # Filename for archive
-          filename: 'release.zip' # default is release.zip
+          filename: 'release-v0.9.1.zip' # default is release.zip
           exclusions: '*.git* README.md'
           type: zip # optional, default is zip
           
@@ -44,6 +44,6 @@ jobs:
         uses: ncipollo/release-action@v1.12.0
         with:
           artifacts: "release.zip"
-          tag: "v0.9"
+          tag: "v0.9.1"
           commit: main
           token: ${{ secrets.GITHUB_TOKEN }}
