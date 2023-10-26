@@ -259,7 +259,7 @@ function WidgetsPlusPlusCustom.SVG_Update(self)
         local posX, posY, posZ = 0, 0, 0
         local vx, vy, vz = 0, 0, 0
         local sx, sy, sz = 0, 0, 0
-        local sPX, sPY = 0
+        local sPX, sPY = 0, 0
         local dist = 0
         local pCx, pCy, pCz = 0, 0, 0
         local posX, posY, posZ = 0, 0, 0
@@ -359,7 +359,7 @@ function WidgetsPlusPlusCustom.SVG_Update(self)
             local destName = pName
             local destPos = {pCx, pCy, pCz}
             local bf = function() return function()
-                                    DUDUSystem.print('Detination locked on: '..destName)
+                                    DUSystem.print('Detination locked on: '..destName)
                                     DUSystem.setWaypoint('::pos{0,0,'..pCx..','..pCy..','..pCz..'}')
                                     --P.TP.Destination.value = destPos
                                     windowsShow()
