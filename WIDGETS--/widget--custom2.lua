@@ -185,7 +185,7 @@ function WidgetsPlusPlusCustom.SVG_Update(self)
     local posX, posY, posZ = 0, 0, 0
     local vx, vy, vz = 0, 0, 0
     local sx, sy, sz = 0, 0, 0
-    local sPX, sPY = 0
+    local sPX, sPY = 0,0
     local dist = 0
 
     if debug then DUSystem.print("section: 30") end
