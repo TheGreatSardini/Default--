@@ -228,11 +228,13 @@ function WidgetsPlusPlusCustom.SVG_Update(self)
                 svg {
                 position:absolute;
                 top:0px;
-                left:0px
+                left:0px;
+                filter: drop-shadow(2px 2px 0px black) drop-shadow(0px 0px 4px black);
                 }
                 </style><div>
                 <svg viewBox="0 0 ]].. sw ..[[ ]].. sh ..[[">]]
 
+                
     if debug then DUSystem.print("section: 70") end
     local SVG = SVG..[[
     <style>
@@ -246,7 +248,7 @@ function WidgetsPlusPlusCustom.SVG_Update(self)
     if debug then DUSystem.print("section: 80") end
     local t = ""
     local style = "labelWhite"
-    local fs = 75
+    local fs = 50
     local svgT = {}
     local ind = 0
     local n1, n2, n3 = 0, 0, 0
@@ -273,45 +275,24 @@ function WidgetsPlusPlusCustom.SVG_Update(self)
             elseif t < 100 and t > 0 then  style = "labelYellow"
             elseif t == 0 then  style = "labelRed" t = self.core.getElementNameById(id)
             end
+            local minSize = 15
+            local size =  minSize + (1 / (dist*0.6) * (fs + maxHP / 50)) --(200 / (dist*0.2))
+            local text = ""
             if type(t) == "number" and ((t >= 100 and self.showFullHp == true) or (t < 100)) then
-                ind = ind +1
-                svgT[ind] = format([[<text 
-                    x=%.1f 
-                    y=%.1f 
-                    class=%s 
-                    font-size=%.1f
-                    >
-                    %.0f
-                    ％
-                    </text>]], 
-                    sPX, 
-                    sPY, 
-                    style, 
-                    1 / dist * (fs + maxHP / 50),
-                    t
-                    )
+                text = format('%.0f ％',t)
             elseif type(t) == "string" then
+                text = format('%s',t)
+            end
+
+            if text ~= "" then 
                 ind = ind +1
-                svgT[ind] = format([[<text 
-                    x=%.1f 
-                    y=%.1f 
-                    class=%s 
-                    font-size=%.1f
-                    >
-                    %s
-                    </text>]], 
-                    sPX, 
-                    sPY, 
-                    style, 
-                    1 / dist * (fs + maxHP / 50),
-                    t
-                    )
-                    --DUSystem.print("dr loopSTRING")
+                svgT[ind] = format([[<text x=%.1f y=%.1f class=%s font-size=%.1f > %s </text>]], sPX, sPY, style, size, text)
             end
         end
     end
     if debug then DUSystem.print("section: 100") end
     SVG = SVG .. concat(svgT)
+    --SVG = SVG..'<rect x="1" y="1" width="'.. sw-1 ..'" height="'.. sh-1 ..'" style="fill:none;stroke:red;stroke-width:2"'
     --DUSystem.print("svg="..SVG)
     if debug then DUSystem.print("section: end") end
     return SVG..'</svg></div>'
