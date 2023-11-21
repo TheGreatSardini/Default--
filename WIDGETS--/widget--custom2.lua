@@ -27,7 +27,7 @@
 --Ax0 = pitch angle in deg
 --Ay0 = roll angle in deg
 --ThrottlePos = num
---MM = string ("CRUISE" / "TRAVEL" / "PARKING" / "DRONE")
+--MM = string ("CRUISE" / "TRAVEL" / "PLATFORM" / "DRONE")
 --closestPlanetIndex = num (planet index for Helios library)
 --atmofueltank = JSON
 --spacefueltank = JSON
@@ -43,27 +43,16 @@
 --SHIFT = bool
 --mwCLICK = bool
 --GEAR = bool
---pitchInput = num (-1 / 0 / 1)
---rollInput = num (-1 / 0 / 1)
---yawInput = num (-1 / 0 / 1)
---brakeInput = num (-1 / 0 / 1)
---strafeInput = num (-1 / 0 / 1)
---upInput = num (-1 / 0 / 1)
---forwardInput = num (-1 / 0 / 1)
---boosterInput = num (-1 / 0 / 1)
+--pitchInput    = num (-1 / 0 / 1)
+--rollInput     = num (-1 / 0 / 1)
+--yawInput      = num (-1 / 0 / 1)
+--brakeInput    = num (-1 / 0 / 1)
+--strafeInput   = num (-1 / 0 / 1)
+--upInput       = num (-1 / 0 / 1)
+--forwardInput  = num (-1 / 0 / 1)
+--boosterInput  = num (-1 / 0 / 1)
 
-utils            = require("cpml/utils")
-
-local widget_font = "Play"
-local only_show_damaged = false
-local damage_levels = {{100,  'yellow'},
-                       {50,  'orange'},
-                       {10,  'red'},
-                      }
-function ar_round(num, numDecimalPlaces) -- http://lua-users.org/wiki/SimpleRound
-    local mult = 10^(numDecimalPlaces or 0)
-    return math.floor(num * mult + 0.5) / mult
-end
+utils = require("cpml/utils")
 
 WidgetsPlusPlusCustom = {}
 WidgetsPlusPlusCustom.__index = WidgetsPlusPlusCustom
@@ -87,7 +76,7 @@ function WidgetsPlusPlusCustom.new(core, unit, DB, antigrav, warpdrive, shield, 
     self.vFov = DUSystem.getCameraVerticalFov()
     self.hFov = DUSystem.getCameraHorizontalFov()
     self.title = nil
-    self.name = "AR DAMAGE REPPORT--" -- name of the widget
+    self.name = "AR DAMAGE REPORT--" -- name of the widget
     self.SVGSize = {x=self.width,y=self.height} -- size of the window to fit the svg, in pixels
     self.pos = {x=0, y=0}
     self.class = "widgets"  --class = "widgets" (only svg)/ class = "widgetnopadding" (default-- widget style)
@@ -131,15 +120,39 @@ function WidgetsPlusPlusCustom.loadElements(self)
         self.elementsLocalPos[i] = self.core.getElementPositionById(v)
     end
 end
+
+
+local function round(num, numDecimalPlaces) -- http://lua-users.org/wiki/SimpleRound
+    local mult = 10^(numDecimalPlaces or 0)
+    return math.floor(num * mult + 0.5) / mult
+end            
+local function hexToRGB(hex)
+    hex = hex:gsub("#","")
+    return tonumber("0x"..hex:sub(1,2)), tonumber("0x"..hex:sub(3,4)), tonumber("0x"..hex:sub(5,6))
+end
+local function RGBToHex(r,g,b)
+    r,g,b = round(r),round(g),round(b)
+    return string.format("#%02x%02x%02x",r,g,b)
+end
+local function lerp(a,b,t)
+    return a + (b - a) * t
+end
+local function colorGradient(a,b,t) --Returns gradiant T of a and b hex color
+    local ar, ag, ab = hexToRGB(a)
+    local br, bg, bb = hexToRGB(b)
+    return RGBToHex(lerp(ar,br,t), lerp(ag,bg,t), lerp(ab,bb,t))
+end
+
+
 --------------------
 -- CUSTOM BUTTONS --
 --------------------
---local button_function = function() system.print("Hello world!") end
-
---self.buttons = {
---                {button_text = "TEXT", button_function = button_function, class = nil, width = 0, height = 0, posX = 0, posY = 0},   -- class = "separator"   (for invisible background button)
---                }
-
+--[[
+local button_function = function() system.print("Hello world!") end
+self.buttons = {
+                {button_text = "TEXT", button_function = button_function, class = nil, width = 0, height = 0, posX = 0, posY = 0},   -- class = "separator"   (for invisible background button)
+                }
+]]
 
 ----------------
 -- WIDGET SVG --
@@ -162,7 +175,6 @@ function WidgetsPlusPlusCustom.SVG_Update(self)
     local camWP = DUSystem.getCameraWorldPos()
     local camWPx, camWPy, camWPz = camWP[1], camWP[2], camWP[3]
     local camWF = DUSystem.getCameraWorldForward()
-    local camWFv3 = vec3(camWF)
     local camWFx, camWFy, camWFz = camWF[1], camWF[2], camWF[3]
     local camWR = DUSystem.getCameraWorldRight()
     local camWRx, camWRy, camWRz = camWR[1], camWR[2], camWR[3]
@@ -226,22 +238,15 @@ function WidgetsPlusPlusCustom.SVG_Update(self)
     if debug then DUSystem.print("section: 60") end
     local SVG = [[<style>
                 svg {
-                position:absolute;
-                top:0px;
-                left:0px;
-                filter: drop-shadow(2px 2px 0px black) drop-shadow(0px 0px 4px black);
                 }
                 </style><div>
-                <svg viewBox="0 0 ]].. sw ..[[ ]].. sh ..[[">]]
-
+                <svg viewBox="0 0 ]].. sw ..[[ ]].. sh ..[[" style="
+                    position:absolute;
+                    top:0px;
+                    left:0px;
+                    filter: drop-shadow(1px 1px 0px black) drop-shadow(0px 0px 3px black);
+                ">]]
                 
-    if debug then DUSystem.print("section: 70") end
-    local SVG = SVG..[[
-    <style>
-        .labelWhite {text-anchor: middle; font-family: Play; alignment-baseline: middle; stroke-width: 0; fill: white;}
-        .labelYellow {text-anchor: middle; font-family: Play; alignment-baseline: middle; stroke-width: 0; fill: gold;}
-        .labelRed {text-anchor: middle; font-family: Play; alignment-baseline: middle; stroke-width: 0; fill: red;}
-    </style>]]
 
     --Markers
     ----------
@@ -252,9 +257,6 @@ function WidgetsPlusPlusCustom.SVG_Update(self)
     local svgT = {}
     local ind = 0
     local n1, n2, n3 = 0, 0, 0
-    local maxHP = 0
-    local HP = 0
-    local id = 0
 
     if debug then DUSystem.print("section: 90") end
     for i, v in ipairs(elementsPos) do
@@ -265,35 +267,72 @@ function WidgetsPlusPlusCustom.SVG_Update(self)
         projection2D()
         if sz < 1 and sPX > 0 and sPX < sw and sPY > 0  and sPY < sh then
             --if debug then DUSystem.print("section: 92") end
-            id = self.elementsId[i]
-            maxHP = self.core.getElementMaxHitPointsById(id)
-            maxHP = maxHP > 0 and maxHP or 0
-            HP = self.core.getElementHitPointsById(id)
-            HP = HP > 0 and HP or 0
-            t = HP > 0 and (HP / maxHP)*100 or 0
-            if t >= 100 then  style = "labelWhite" 
-            elseif t < 100 and t > 0 then  style = "labelYellow"
-            elseif t == 0 then  style = "labelRed" t = self.core.getElementNameById(id)
+
+            -- set local variables --
+            local id = self.elementsId[i]
+            local itemId = self.core.getElementItemIdById(id)
+            local maxHP = self.core.getElementMaxHitPointsById(id); maxHP = maxHP > 0 and maxHP or 0
+            local HP = self.core.getElementHitPointsById(id); HP = HP > 0 and HP or 0
+
+
+            -- lives left --
+            life = ""
+            maxLives = self.core.getElementMaxRestorationsById(id)
+            lives = self.core.getElementRestorationsById(id)
+            if lives < maxLives then
+                life = ' ['..lives..'/'..maxLives..']'
             end
-            local minSize = 15
-            local size =  minSize + (1 / (dist*0.6) * (fs + maxHP / 50)) --(200 / (dist*0.2))
-            local text = ""
-            if type(t) == "number" and ((t >= 100 and self.showFullHp == true) or (t < 100)) then
-                text = format('%.0f ％',t)
-            elseif type(t) == "string" then
-                text = format('%s',t)
+            coreUnit = itemId == 1417952990 or itemId == 1418170469 or itemId == 183890525 or itemId == 183890713 and 1 or 0
+
+            if HP < maxHP or self.showFullHp == true or (lives == 0 and coreUnit == 0) then
+                local item = DUSystem.getItem(itemId)
+                --DUSystem.print(Data:serialize(item))
+                local name = item.locDisplayNameWithSize
+
+                local color = colorGradient("#FF4400","#FFFF44",HP/maxHP)
+                if HP >= maxHP then color = "#FFFFFF" -- max health
+                elseif HP <= 0 then color = "#BB0000" end -- dead
+
+                --local distAdjustment = utils.clamp(maxHP/10000,0,2)
+                --local sF = 0.7 + ((1 / (dist-distAdjustment)) * 4)-- * (fs + maxHP / 1000)) --scaleFactor
+                local sF = 0.7 + ((1 / dist) * (4 + utils.clamp(maxHP/1000,0,6)))-- * (fs + maxHP / 1000)) --scaleFactor
+
+                -- name and pointer
+                ind = ind +1
+                svgT[ind] = [[
+                    <circle style="opacity:0.8;fill:none;stroke:]]..color..[[;stroke-width:]]..(1*sF)..[[;stroke-miterlimit:]]..(1*sF)..[[;" cx="]]..sPX..[[" cy="]]..sPY..[[" r="]]..(10*sF)..[[" />
+                    <polyline style="opacity:0.8;fill:none;stroke:]]..color..[[;stroke-width:]]..(1*sF)..[[;stroke-miterlimit:]]..(1*sF)..[[;" points="]]..sPX-(10*sF)..[[,]]..sPY-(10*sF)..[[ ]]..sPX-(20*sF)..[[,]]..sPY-(20*sF)..[[ ]]..sPX-(50*sF)..[[,]]..sPY-(20*sF)..[["/>
+                    <text text-anchor="end" alignment-baseline="bottom" x="]]..sPX-(25*sF)..[[" y="]]..sPY-(22*sF)..[[" style="font-size:]]..11*sF..[[px;fill:]]..color..[[">]]..name..life..[[</text>
+                ]]
+
+                -- health indicator
+                if HP > 0 then
+                    local E=HP/maxHP*359.99
+                    local F=1
+                    if E<180 then F=0 end
+                    ind = ind +1
+                    svgT[ind] = [[
+                        <path style="opacity:0.8;fill:none;stroke:]]..color..[[;stroke-width:]]..(3*sF)..[[;stroke-miterlimit:1;" d="M ]]..sPX+(7*sF)*math.cos((0-90)*math.pi/180)..[[ ]]..sPY+(7*sF)*math.sin((0-90)*math.pi/180)..[[ A ]]..(7*sF)..[[ ]]..(7*sF)..[[ 0 ]]..F..[[ 1 ]]..sPX+(7*sF)*math.cos((E-90)*math.pi/180)..[[ ]]..sPY+(7*sF)*math.sin((E-90)*math.pi/180)..[["/>
+                    ]]
+                else
+                    ind = ind +1
+                    svgT[ind] = [[
+                        <polyline style="opacity:0.8;fill:none;stroke:]]..color..[[;stroke-width:]]..(3*sF)..[[;stroke-miterlimit:1;" points="]]..sPX-(6*sF)..[[,]]..sPY-(6*sF)..[[ ]]..sPX+(6*sF)..[[,]]..sPY+(6*sF)..[["/>
+                        <polyline style="opacity:0.8;fill:none;stroke:]]..color..[[;stroke-width:]]..(3*sF)..[[;stroke-miterlimit:1;" points="]]..sPX+(6*sF)..[[,]]..sPY-(6*sF)..[[ ]]..sPX-(6*sF)..[[,]]..sPY+(6*sF)..[["/>
+                    ]]
+                end
             end
 
-            if text ~= "" then 
-                ind = ind +1
-                svgT[ind] = format([[<text x=%.1f y=%.1f class=%s font-size=%.1f > %s </text>]], sPX, sPY, style, size, text)
-            end
+
         end
     end
-    if debug then DUSystem.print("section: 100") end
+    --if debug then DUSystem.print("section: 100") end
     SVG = SVG .. concat(svgT)
+
     --SVG = SVG..'<rect x="1" y="1" width="'.. sw-1 ..'" height="'.. sh-1 ..'" style="fill:none;stroke:red;stroke-width:2"'
     --DUSystem.print("svg="..SVG)
+
     if debug then DUSystem.print("section: end") end
     return SVG..'</svg></div>'
+
 end
