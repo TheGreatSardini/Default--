@@ -28,7 +28,7 @@ return {
     planetarySystemId=0,
     name = {"Hadron"},
     type = {"POI"},
-    pos = "::pos{0,2,-21.7343,122.5231,135.2604}",
+    pos = "::pos{0,2,-21.6777,122.4979,129.8458}",
     symbol = "❤️",
 },
 {
@@ -39,14 +39,7 @@ return {
     pos = "::pos{0,2,41.3088,92.8919,-0.0002}}",
     symbol = "❤️",
 },
-{
-    bodyId=2,
-    planetarySystemId=0,
-    name = {"Llama"},
-    type = {"POI"},
-    pos = "::pos{0,2,44.9843,93.9206,-0.0000}",
-    symbol = "❤️",
-},
+
 {
     bodyId=2,
     planetarySystemId=0,
@@ -55,14 +48,7 @@ return {
     pos = "::pos{0,2,41.1649,90.4491,-0.0006}",
     symbol = "❤️",
 },
-{
-    bodyId=2,
-    planetarySystemId=0,
-    name = {"Lachenlaud GOI"},
-    type = {"POI"},
-    pos = "::pos{0,2,45.0978,89.6431,2.4998}",
-    symbol = "❤️",
-},
+
 {
     bodyId=2,
     planetarySystemId=0,
@@ -87,6 +73,14 @@ return {
     pos = "::pos{0,2,37.7504,109.1539,-0.0001}",
     symbol = "$",
 },
+{
+    bodyId=2,
+    planetarySystemId=0,
+    name = {"Sharktooth Speedway"},
+    type = {"POI"},
+    pos = "::pos{0,2,45.6145,75.2546,2.9158}",
+    symbol = "↣",
+},
 --HAVEN
 {
     bodyId=27,
@@ -104,40 +98,56 @@ return {
     pos = "::pos{0,27,-13.1145,-11.8684,-0.0002}",
     symbol = "❤️",
 },
+{
+    bodyId=27,
+    planetarySystemId=0,
+    name = {"Ground Zero"},
+    type = {"POI"},
+    pos = "::pos{0,27,8.3044,22.5725,210.6496}",
+    symbol = "❤",
+},
+{
+    bodyId=27,
+    planetarySystemId=0,
+    name = {"Jero"},
+    type = {"POI"},
+    pos = "::pos{0,27,12.3236,23.6763,1.9178}",
+    symbol = "❤",
+},
 --MADIS
 {
     bodyId=1,
     planetarySystemId=0,
-    name = {"Madis Chromite"},
+    name = {"Madis Chromite 1"},
     type = {"POI"},
-    pos = "::pos{0,1,-2.6737,-39.3010,0.0000}",
+    pos = "::pos{0,1,-2.7095,-39.2640,932.2776}",
     symbol = "♝",
 },
-
---{
---    bodyId=0,
---    planetarySystemId=0,
---    name = {"Station Penrose"},
---    type = {"POI"},
---    pos = "::pos{0,0,-672056.1926,1346458.4146,-2554607.8157}",
---    symbol = "✪",
---},
---{
---    bodyId=27,
---    planetarySystemId=0,
---    name = {"Ground Zero"},
---    type = {"POI"},
---    pos = "::pos{0,27,8.3044,22.5725,210.6496}",
---    symbol = "❤",
---},
---{
---    bodyId=27,
---    planetarySystemId=0,
---    name = {"Jero"},
---    type = {"POI"},
---    pos = "::pos{0,27,12.3236,23.6763,1.9178}",
---    symbol = "❤",
---},
+{
+    bodyId=1,
+    planetarySystemId=0,
+    name = {"Madis Chromite 2"},
+    type = {"POI"},
+    pos = "::pos{0,1,-1.3606,-38.2587,940}",
+    symbol = "♝",
+},
+{
+    bodyId=1,
+    planetarySystemId=0,
+    name = {"Madis Chromite 3"},
+    type = {"POI"},
+    pos = "::pos{0,1,-1.3888,-40.3042,1020}",
+    symbol = "♝",
+},
+-- SPACE
+{
+    bodyId=0,
+    planetarySystemId=0,
+    name = {"Station Penrose"},
+    type = {"POI"},
+    pos = "::pos{0,0,-672056.1926,1346458.4146,-2554607.8157}",
+    symbol = "✪",
+},
 --{
 --    bodyId=27,
 --    planetarySystemId=0,

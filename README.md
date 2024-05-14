@@ -51,10 +51,16 @@ Keep WIDGETS-- folder and its files as they are in the custom folder
 
 ### Chat Commands:
 - help = prints the help menu in lua chat tab
-- reset all = formats databank to factory settings
 - ::pos{} = translates map pos to world coordinate
+- reset all = formats databank to factory settings
+- reset = Resets the current player's database profile to default.
+- reset others = reset other players settings (make the current user the only profile on databank)
+- alt 3000 = Set altitude lock to the specified altitude (can also be used in platform or drone mode to auto fly to the specified altitude)
 
-
+### Other Features:
+- rename fuel tanks to end with L will display on left side of main hud
+- Add eco as a tag to engines you want to be used before other engines (like on maneuver engines if you also have militaries on the ship)
+- Hover engines always fire before vertical boosters if they have enough thrust.
 
 ## MULTIPLE FUEL TANKS CONFIGURATION:
 
@@ -80,6 +86,16 @@ Widgets can be turned on and off at will from the Main Menu.<br>
 To load succesfully a new custom widget, its name must match the incrementing list.<br>
 Custom SVG, buttons, and flush override can be set by the widgets
 
+### Built in Custom Widgets
+- SOLAR SYSTEM--
+  This widget displays an augmented reality dispay of saved locations stored in the BookmarksCustoms.lua file
+- AR DAMAGE REPORT--
+  This widget gives an augmented Reality display of damaged elements and elements on ther last life (0 remaining). Works best with a remote controller
+
+### Lua Parameters
+printDebug = Print extra data in the lua channel while executing actions. (more Chatty Chat)
+PerUserSaves = Save ALL users separately. if false then other users share one profile
+masterDataID = Flight Script will use owner's data as default for new users
 
 ## COPY RIGHTS:
 >Free to use / change / customize.<br>

@@ -1,33 +1,36 @@
+--widget--custom2.lua
+
 --DEFAULT-- windows colors variables:
 --------------------------------------
---P.MS.TITLE_COLOR.value
---P.MS.TITLE_COLOR_A.value
---P.MS.TITLE_TEXT_COLOR.value
---P.MS.WN_COLOR.value
---P.MS.WN_COLOR_A.value
---P.MS.WN_TEXT_COLOR.value
---P.MS.BUTTON_COLOR.value
---P.MS.BUTTON_BORDER_COLOR.value
---P.MS.BUTTON_COLOR_A.value
---P.MS.BUTTON_TEXT_COLOR.value
---P.MS.WIDGET_TEXT_COLOR.value
---P.MS.WIDGET_ANIM_COLOR.value
---P.MS.WIDGET_FIXED_COLOR.value
+--P.MS.TC.value  = TITLE_COLOR
+--P.MS.TCA.value = TITLE_COLOR_A
+--P.MS.TTC.value = TITLE_TEXT_COLOR
+--P.MS.WC.value  = WN_COLOR
+--P.MS.WCA.value = WN_COLOR_A
+--P.MS.WTC.value = WN_TEXT_COLOR
+--P.MS.BC.value  = BUTTON_COLOR
+--P.MS.BBC.value = BUTTON_BORDER_COLOR
+--P.MS.BCA.value = BUTTON_COLOR_A
+--P.MS.BTC.value = BUTTON_TEXT_COLOR
+--P.MS.wTC.value = WIDGET_TEXT_COLOR
+--P.MS.wAC.value = WIDGET_ANIM_COLOR
+--P.MS.WFC.value = WIDGET_FIXED_COLOR
 
 --DEFAULT-- updated variables:
 -------------------------------
 --currentTime = num
 --inspace = 0 in atmo 1 in space
---xSpeedKPH = num kmph
---ySpeedKPH = num kmph
---zSpeedKPH = num kmph
---xyzSpeedKPH = num kmph
+--xSpeedKPH = num km/h
+--ySpeedKPH = num km/h
+--zSpeedKPH = num km/h
+--xyzSpeedKPH = num km/h
+--velMag = num m/s
 --Az = drift rot angle in deg
 --Ax = drift pitch angle in deg
 --Ax0 = pitch angle in deg
 --Ay0 = roll angle in deg
 --ThrottlePos = num
---MM = string ("CRUISE" / "TRAVEL" / "PLATFORM" / "DRONE")
+--MM = string ("CRUISE" / "TRAVEL" / "PARKING" / "DRONE")
 --closestPlanetIndex = num (planet index for Helios library)
 --atmofueltank = JSON
 --spacefueltank = JSON
@@ -43,17 +46,16 @@
 --SHIFT = bool
 --mwCLICK = bool
 --GEAR = bool
---pitchInput    = num (-1 / 0 / 1)
---rollInput     = num (-1 / 0 / 1)
---yawInput      = num (-1 / 0 / 1)
---brakeInput    = num (-1 / 0 / 1)
---strafeInput   = num (-1 / 0 / 1)
---upInput       = num (-1 / 0 / 1)
---forwardInput  = num (-1 / 0 / 1)
---boosterInput  = num (-1 / 0 / 1)
+--pitchInput = num (-1 / 0 / 1)
+--rollInput = num (-1 / 0 / 1)
+--yawInput = num (-1 / 0 / 1)
+--brakeInput = num (-1 / 0 / 1)
+--strafeInput = num (-1 / 0 / 1)
+--upInput = num (-1 / 0 / 1)
+--forwardInput = num (-1 / 0 / 1)
+--boosterInput = num (-1 / 0 / 1)
 
-utils = require("cpml/utils")
-
+local utils = require("cpml/utils")
 WidgetsPlusPlusCustom = {}
 WidgetsPlusPlusCustom.__index = WidgetsPlusPlusCustom
 
@@ -82,6 +84,7 @@ function WidgetsPlusPlusCustom.new(core, unit, DB, antigrav, warpdrive, shield, 
     self.class = "widgets"  --class = "widgets" (only svg)/ class = "widgetnopadding" (default-- widget style)
     self.draggable = false  --allow widget to be dragged
     self.fixed = true  --prevent widget from going over others
+    self.scalable = false
     
     self.showFullHp = false
     self.elementsId = {}
@@ -110,9 +113,37 @@ function WidgetsPlusPlusCustom.getButtons(self) --returns buttons list
     return self.buttons
 end
 
+--[[
 function WidgetsPlusPlusCustom.flushOverRide(self) --replace the flush thrust
+    return 0,0,0,0,0,0
+end
+
+function WidgetsPlusPlusCustom.onUpdate(self) --triggered onUpdate
     return nil
 end
+
+function WidgetsPlusPlusCustom.loadData(self) -- called on data load
+end
+
+function WidgetsPlusPlusCustom.saveData(self) -- called on data save
+end
+
+function WidgetsPlusPlusCustom.onActionStart(self, action) -- uncomment to receive pressed key
+     --DUSystem.print(action)
+end
+
+function WidgetsPlusPlusCustom.onActionStop(self, action) -- uncomment to receive released key
+     --DUSystem.print(action)
+end
+
+function WidgetsPlusPlusCustom.onActionLoop(self, action) -- uncomment to receive held key
+     --DUSystem.print(action)
+end
+
+function WidgetsPlusPlusCustom.onInputText(self, text) -- uncomment to process lua chat
+    --DUSystem.print("typed: "..text)
+end
+]]
 
 function WidgetsPlusPlusCustom.loadElements(self)
     self.elementsId = self.core.getElementIdList()
@@ -236,10 +267,7 @@ function WidgetsPlusPlusCustom.SVG_Update(self)
     end
 
     if debug then DUSystem.print("section: 60") end
-    local SVG = [[<style>
-                svg {
-                }
-                </style><div>
+    local SVG = [[<div>
                 <svg viewBox="0 0 ]].. sw ..[[ ]].. sh ..[[" style="
                     position:absolute;
                     top:0px;
@@ -290,7 +318,7 @@ function WidgetsPlusPlusCustom.SVG_Update(self)
                 local name = item.locDisplayNameWithSize
 
                 local color = colorGradient("#FF4400","#FFFF44",HP/maxHP)
-                if HP >= maxHP then color = "#FFFFFF" -- max health
+                if HP >= maxHP - 1 then color = "#FFFFFF" -- max health
                 elseif HP <= 0 then color = "#BB0000" end -- dead
 
                 --local distAdjustment = utils.clamp(maxHP/10000,0,2)

@@ -1,27 +1,30 @@
+--widget--custom1.lua
+
 --DEFAULT-- windows colors variables:
 --------------------------------------
---P.MS.TITLE_COLOR.value
---P.MS.TITLE_COLOR_A.value
---P.MS.TITLE_TEXT_COLOR.value
---P.MS.WN_COLOR.value
---P.MS.WN_COLOR_A.value
---P.MS.WN_TEXT_COLOR.value
---P.MS.BUTTON_COLOR.value
---P.MS.BUTTON_BORDER_COLOR.value
---P.MS.BUTTON_COLOR_A.value
---P.MS.BUTTON_TEXT_COLOR.value
---P.MS.WIDGET_TEXT_COLOR.value
---P.MS.WIDGET_ANIM_COLOR.value
---P.MS.WIDGET_FIXED_COLOR.value
+--P.MS.TC.value  = TITLE_COLOR
+--P.MS.TCA.value = TITLE_COLOR_A
+--P.MS.TTC.value = TITLE_TEXT_COLOR
+--P.MS.WC.value  = WN_COLOR
+--P.MS.WCA.value = WN_COLOR_A
+--P.MS.WTC.value = WN_TEXT_COLOR
+--P.MS.BC.value  = BUTTON_COLOR
+--P.MS.BBC.value = BUTTON_BORDER_COLOR
+--P.MS.BCA.value = BUTTON_COLOR_A
+--P.MS.BTC.value = BUTTON_TEXT_COLOR
+--P.MS.wTC.value = WIDGET_TEXT_COLOR
+--P.MS.wAC.value = WIDGET_ANIM_COLOR
+--P.MS.WFC.value = WIDGET_FIXED_COLOR
 
 --DEFAULT-- updated variables:
 -------------------------------
 --currentTime = num
 --inspace = 0 in atmo 1 in space
---xSpeedKPH = num kmph
---ySpeedKPH = num kmph
---zSpeedKPH = num kmph
---xyzSpeedKPH = num kmph
+--xSpeedKPH = num km/h
+--ySpeedKPH = num km/h
+--zSpeedKPH = num km/h
+--xyzSpeedKPH = num km/h
+--velMag = num m/s
 --Az = drift rot angle in deg
 --Ax = drift pitch angle in deg
 --Ax0 = pitch angle in deg
@@ -51,42 +54,36 @@
 --upInput = num (-1 / 0 / 1)
 --forwardInput = num (-1 / 0 / 1)
 --boosterInput = num (-1 / 0 / 1)
+
 local delay = 0
 local widget_font = "Play"
 local utils = require("cpml/utils")
-local BookmarksPOI = require "autoconf.custom.WIDGETS--.BookmarksPOI"
-local BookmarksCustoms = require "autoconf.custom.WIDGETS--.BookmarksCustoms"
+local BookmarksPOI = require (widgetsFolder .. ".BookmarksPOI")
+local BookmarksCustoms = require (widgetsFolder .. ".BookmarksCustoms")
 
-local interactablePOIS = {}
-local otherPOIS = {}
+local planets = {}
 local ind = 0
 for k, planet in pairs(Helios) do
     ind = ind + 1
-    interactablePOIS[ind] = planet
+    planets[ind] = planet
 end
 
+ind = 0
+local bookmarks = {}
 for i, poi in ipairs(BookmarksPOI) do
-    if poi.bodyId ~= 0 then
-        otherPOIS[#otherPOIS+1] = poi
-    else
-        ind = ind + 1
-        interactablePOIS[ind] = poi
-    end
+    ind = ind + 1
+    bookmarks[ind] = poi
 end
 for i, poi in ipairs(BookmarksCustoms) do
-    if poi.bodyId ~= 0 then
-        otherPOIS[#otherPOIS+1] = poi
-    else
-        ind = ind + 1
-        interactablePOIS[ind] = poi
-    end
+    ind = ind + 1
+    bookmarks[ind] = poi
 end
 
 ind = ind + 1
-interactablePOIS[ind] = {id = 999, center = {0,0,0}, name = {"Safe Zone"}, radius = 100000, type = {"SZ"}}
+bookmarks[ind] = {id = 999, center = {0,0,0}, name = {"Safe Zone"}, radius = 100000, type = {"SZ"}}
 
 ind = ind + 1
-interactablePOIS[ind] = {id = 9999, center = {0,0,0}, name = {"Closest Safe Zone"}, radius = 100000, type = {"SZ"}}
+bookmarks[ind] = {id = 9999, center = {0,0,0}, name = {"Closest Safe Zone"}, radius = 100000, type = {"SZ"}}
 
 
 local entriesTotNum = ind
@@ -115,23 +112,21 @@ function WidgetsPlusPlusCustom.new(core, unit, DB, antigrav, warpdrive, shield, 
     self.height = DUSystem.getScreenHeight()
     self.vFov = DUSystem.getCameraVerticalFov()
     self.hFov = DUSystem.getCameraHorizontalFov()
-    self.name = 'SOLAR SYSTEM--' -- name of the widget
+    self.name = 'SOLAR SYSTEM+-' -- name of the widget
     self.SVGSize = {x=self.width,y=self.height} -- size of the window to fit the svg, in pixels
     self.pos = {x=0, y=0}
     self.class = 'widgets'  --class = "widgets" (only svg)/ class = "widgetnopadding" (default-- widget style)
     self.draggable = false  --allow widget to be dragged
     self.fixed = true  --prevent widget from going over others
     self.title = nil
-    self.scale = 1
+    self.scalable = false
+    
+    self.click = false
     return self
 end
 
 function WidgetsPlusPlusCustom.getSize(self) --returns the svg size
     return self.SVGSize
-end
-
-function WidgetsPlusPlusCustom.getScale(self) --returns the svg Scale
-    return self.scale
 end
 
 function WidgetsPlusPlusCustom.getName(self) --returns the widget name
@@ -150,36 +145,40 @@ function WidgetsPlusPlusCustom.getButtons(self) --returns buttons list
     return self.buttons
 end
 
-function WidgetsPlusPlusCustom.flushOverRide(self) --replace the flush thrust
-    return nil
-end
+--function WidgetsPlusPlusCustom.flushOverRide(self) --replace the flush thrust
+--    return nil
+--end
 
 --function WidgetsPlusPlusCustom.loadData(self)
---    self.modeOn = Data:getData("DM_droneMode") ~= nil and Data:getData("DM_droneMode") or false
 --end
 --
 --function WidgetsPlusPlusCustom.saveData(self)
---    if Data then
---        Data:setData("DM_droneMode",self.modeOn)
---    end
 --end
 
---function WidgetsPlusPlusCustom.onActionStart(self, action) -- uncomment to receive pressed key
---    --DUSystem.print(action)
---end
+function WidgetsPlusPlusCustom.onActionStart(self, action) -- uncomment to receive pressed key
+    if action == "leftmouse" and not ALT then
+        self.click = true 
+    end
+end
 
--- function WidgetsPlusPlusCustom.onActionStop(self, action) -- uncomment to receive released key
+function WidgetsPlusPlusCustom.onActionStop(self, action) -- uncomment to receive released key
+    if action == "leftmouse" and not ALT then
+        self.click = false 
+    end
+end
+
+-- function WidgetsPlusPlusCustom.onActionLoop(self, action) -- uncomment to receive held key
 --      --DUSystem.print(action)
 -- end
 
--- function WidgetsPlusPlusCustom.onActionLoop(self, action) -- uncomment to receive pressed key
---      --DUSystem.print(action)
--- end
+--function WidgetsPlusPlusCustom.onInputText(self, text) -- uncomment to process lua chat
+    --DUSystem.print("typed: "..text)
+--end
 
 ----------------
 -- WIDGET SVG --
 ----------------
-local sqrt, tan, rad, atan, format, clamp, concat = math.sqrt, math.tan, math.rad, math.atan, string.format, utils.clamp, table.concat
+local sqrt, tan, rad, atan, format, clamp, concat, abs, floor = math.sqrt, math.tan, math.rad, math.atan, string.format, utils.clamp, table.concat, math.abs, math.floor
 
 local function dotVec(x1,y1,z1,x2,y2,z2)
     return x1*x2 + y1*y2 + z1*z2
@@ -263,14 +262,11 @@ function WidgetsPlusPlusCustom.SVG_Update(self)
         local dist = 0
         local pCx, pCy, pCz = 0, 0, 0
         local posX, posY, posZ = 0, 0, 0
-        local pName = ""
-        local pRadius = 0
-        local pIndex = closestPlanetIndex
         local big = 20
         local little = 14
         local dist_str = ""
         local SVGind = 0
-    
+
         local FIVS = intersectVecSphere(cWPx, cWPy, cWPz, cWOFx, cWOFy, cWOFz, 13856549.3576,7386341.6738,-258459.8925, 18000000) --::pos{0,0,13856549.3576,7386341.6738,-258459.8925} --forward safe zone
         local szcnx, szcny, szcnz = normalizeVec(cWPx-13856549.3576, cWPy-7386341.6738, cWPz+258459.8925)
         --DUSystem.print('CIVS')
@@ -284,10 +280,11 @@ function WidgetsPlusPlusCustom.SVG_Update(self)
             CIVS = intersectVecSphere(cWPx, cWPy, cWPz, szcnx, szcny, szcnz, 13856549.3576,7386341.6738,-258459.8925, 18000000) -- closest safe zone outside
         end
     
-        if 1==0 then --P.TP.Destination.value ~= nil and #P.TP.Destination.value == 3 then
-            interactablePOIS[entriesTotNum+1] = {center = P.TP.Destination.value, name = {'Destination'}, radius = 1000, type = {'Destination'}}
+        if P.AP_destination.value ~= nil and #P.AP_destination.value == 3 and P.AP_destination.value[1] ~= 0 and P.AP_destination.value[2] ~= 0 then
+            bookmarks[entriesTotNum+1] = {center = P.AP_destination.value, name = {'Destination'}, radius = 0, type = {'Destination'}}
+            --DUSystem.print("destination found")
         else
-            interactablePOIS[entriesTotNum+1] = {center = {0,0,0}, name = {" "}, radius = 0, type = {''}}
+            bookmarks[entriesTotNum+1] = {} --{center = {0,0,0}, name = {" "}, radius = 0, type = {''}}
         end
     
         local function projection2D()
@@ -303,7 +300,7 @@ function WidgetsPlusPlusCustom.SVG_Update(self)
         
         local SVG = {}
         SVGind = SVGind + 1
-        SVG[SVGind] = format('<svg style="position: absolute; left:0px; top:0px" viewBox="0 0 %.1f %.1f" >', self.width, self.height)
+        SVG[SVGind] = format('<div><svg style="position: absolute; left:0px; top:0px" viewBox="0 0 %.1f %.1f" >', self.width, self.height)
         if ALT == true then
             SVGind = SVGind + 1
             SVG[SVGind] = format('<circle cx="%.1f" cy="%.1f" r="4" stroke="white" stroke-width="2" fill="black" fill-opacity="0.2"/>', self.width/2, self.height/2)  -- Overlay alignment circle
@@ -324,111 +321,200 @@ function WidgetsPlusPlusCustom.SVG_Update(self)
         end
         SVGind = SVGind + 1
         SVG[SVGind] = format('<text x="%.2f" y="%.2f" font-size="20" text-anchor="middle" font-family="%s" alignment-baseline="middle" fill="%s">┼</text>', sPX, sPY, widget_font, AC)
-        
+
+        local bti = 0
         self.buttons = {}
-        for i, entry in ipairs(interactablePOIS) do
-            if entry.id == 999 then
-                if FIVS == false then
-                    goto skip
-                else
-                    interactablePOIS[i].center = FIVS
-                    --DUSystem.print(IVS[1].."/"..IVS[2].."/"..IVS[3].."/"..ivsD)
-                end
-            elseif entry.id == 9999 then
-                if CIVS == false then
-                    goto skip
-                else
-                    interactablePOIS[i].center = CIVS
-                    --DUSystem.print(IVS[1].."/"..IVS[2].."/"..IVS[3].."/"..ivsD)
-                end
+        for i, v in ipairs(planets) do
+            if planets[i].center ~= nil and #planets[i].center == 3 then
+                pCx, pCy, pCz = planets[i].center[1], planets[i].center[2], planets[i].center[3]
+            elseif planets[i].pos ~= nil and string.sub(planets[i].pos,1,6) == '::pos{' then
+                pCx, pCy, pCz = convertToWorldCoordinates(planets[i].pos)
+            else
+                goto skip
             end
-            
-            if interactablePOIS[i].center ~= nil and #interactablePOIS[i].center == 3 then
-                pCx, pCy, pCz = interactablePOIS[i].center[1], interactablePOIS[i].center[2], interactablePOIS[i].center[3]
-            elseif interactablePOIS[i].pos ~= nil and string.sub(interactablePOIS[i].pos,1,6) == '::pos{' then
-                pCx, pCy, pCz = convertToWorldCoordinates(interactablePOIS[i].pos)
-            end
-            pName = entry.name[1]
-            pRadius = entry.radius ~= nil and entry.radius or 500
-    
             posX = pCx - camWPx
             posY = pCy - camWPy
             posZ = pCz - camWPz
             projection2D()
-            
-            local destName = pName
-            local destPos = {pCx, pCy, pCz}
-            local bf = function() return function()
-                                    DUSystem.print('Detination locked on: '..destName)
-                                    DUSystem.setWaypoint('::pos{0,0,'..pCx..','..pCy..','..pCz..'}')
-                                    --P.TP.Destination.value = destPos
-                                    windowsShow()
-                                    end end
-            self.buttons[i] = {"", nil, {name = interactablePOIS[i].name[1], class = 'separator', width = 1, height = 1, posX = -1, posY = -1}}
-    
-            if sz < 1 and sPX > 0 and sPX < self.width and sPY > 0  and sPY < self.height and (dist > pRadius*5 and entry.type[1] ~= 'SZ' or entry.type[1] == 'SZ' and inspace == 1) then
-                local size = entry.type[1] ~= 'SZ' and atan(pRadius/2, dist) * (self.width / tan(rad(self.hFov * 0.5))) or 25
-                SVGind = SVGind + 1
-                SVG[SVGind] = format('<circle cx=%.2f cy=%.2f r=%.2f stroke=%s stroke-width=%.f fill=%s fill-opacity="0.2"/>', sPX, sPY, size, BBC, 2, WC)
-    
-                local bsize = size>50 and size or 50
-                self.buttons[i][3].width = bsize
-                self.buttons[i][3].height = bsize
-                self.buttons[i][3].posX = sPX-bsize/2
-                self.buttons[i][3].posY = sPY-bsize/2
-                self.buttons[i][2] = bf()
-    
-                if (entry.type[1] == 'Moon' or entry.type[1] == 'Asteroid') and  dist > moon_distance then
+
+            if sz < 1 and sPX > 0 and sPX < self.width and sPY > 0  and sPY < self.height then
+                if dist >= 200000 then
+                    dist_str = format('%.2f SU', dist / 200000)
+                elseif dist >= 1000 then
+                    dist_str = format('%.1f km', dist / 1000)
                 else
-                    if dist >= 200000 then
-                        dist_str = format('%.2f SU', dist / 200000)
-                    elseif dist >= 1000 then
-                        dist_str = format('%.1f km', dist / 1000)
-                    else
-                        dist_str = format('%.1f m', dist)
-                    end
-                    
-                    local offsety = 0
-                    local offsetx = 0
-                    if entry.type[1] == 'Destination' or pName == 'Sicari' then offsety = -70 end
-                    if entry.type[1] == 'SZ' then offsetx = size + 70 offsety = -35 end
-                    local fop = 1
-                    if alt < 150000 then fop = 0.5 end
-                    
+                    dist_str = format('%.0f m', dist)
+                end
+                local bmradius = planets[i].radius ~= nil and planets[i].radius or 1
+                local bmName = planets[i].name and type(planets[i].type) == "table" and planets[i].name[1] or "missing name"
+                local e_T = planets[i].type and type(planets[i].type) == "table" and planets[i].type[1] or "bookmark"
+                --DUSystem.print(e_T)
+
+                --DUSystem.print(bmName)
+                if dist > bmradius*5 then
+                    local size = atan(bmradius/2, dist) * (self.width / tan(rad(self.hFov * 0.5)))
+                    local offsetx, offsety = 0, 0
+                    if bmName == 'Sicari' then offsety = -70 end
+                    local fop = inspace == 1 and 1 or 0.8
                     SVGind = SVGind + 1
-                    SVG[SVGind] = format('<text x="%.2f" y="%.2f" style="fill:%s; text-anchor: middle; font-family: Play; fill-opacity:%.1f">', sPX+offsetx, sPY+offsety, WTC, fop)
-                                ..format('<tspan x="%.2f" dy="%.2f" style="font-size: %.1f; fill-opacity:%.1f">%s</tspan>', sPX+offsetx, size + big, big, fop, pName)
-                                ..format('<tspan x="%.2f" dy="%.2f" style="font-size: %.1f; fill-opacity:%.1f">%s</tspan>', sPX+offsetx, little, little, fop, dist_str)
-                                ..'</text>'
+                    SVG[SVGind] = format('<circle cx=%.2f cy=%.2f r=%.2f stroke=%s stroke-width=%.f stroke-opacity=%.1f fill=%s fill-opacity="0.2"/>', sPX, sPY, size, BBC, 2, fop, WC)
+                    if e_T == "Planet" or (e_T == "Moon" and dist < moon_distance) or (e_T == "Asteroid" and dist < moon_distance) then
+                        SVGind = SVGind + 1
+                        SVG[SVGind] = format('<text x="%.2f" y="%.2f" style="fill:%s; text-anchor: middle; font-family: Play; fill-opacity:%.1f">', sPX+offsetx, sPY+offsety, WTC, fop)
+                                    ..format('<tspan x="%.2f" dy="%.2f" style="font-size: %.1f; fill-opacity:%.1f">%s</tspan>', sPX+offsetx, size + big, big, fop, bmName)
+                                    ..format('<tspan x="%.2f" dy="%.2f" style="font-size: %.1f; fill-opacity:%.1f">%s</tspan>', sPX+offsetx, little, little, fop, dist_str)
+                                    .."</text>"
+                        local destName = bmName
+                        local aWPx, aWPy, aWPz = normalizeVec(cWPx-pCx, cWPy-pCy, cWPz-pCz)
+                        local aT = planets[i].atmosphereThickness + bmradius
+                        aWPx, aWPy, aWPz = pCx + aT * aWPx, pCy + aT * aWPy, pCz + aT * aWPz
+                        local destPos = {aWPx, aWPy, aWPz}
+                        local bf = function() return function()
+                                                DUSystem.print('Detination locked on: '..destName)
+                                                DUSystem.setWaypoint('::pos{0,0,'..aWPx..','..aWPy..','..aWPz..'}')
+                                                P.AP_destination.value = destPos
+                                                P.AP_destination.name = destName
+                                                windowsShow()
+                                                end end
+                        bti = bti + 1
+                        local bsize = size>50 and size or 50
+                        --self.buttons[bti] = {"X", bf(), {name = planets[i].name[1], class = nil, width = bsize, height = bsize, posX = sPX-bsize/2, posY = sPY-bsize/2}}
+                        self.buttons[bti] = {"", bf(), {name = planets[i].name[1], class = 'separator', width = bsize, height = bsize, posX = sPX-bsize/2, posY = sPY-bsize/2}}
+
+                        if self.click == true and abs(sPX - self.width/2) < bsize/2 and abs(sPY - self.height/2) < bsize/2 and (P.AP_destination.name == nil or P.AP_destination.name ~= nil and destName ~= P.AP_destination.name) then
+                            DUSystem.print('Detination locked on: '..destName)
+                            DUSystem.setWaypoint('::pos{0,0,'..aWPx..','..aWPy..','..aWPz..'}')
+                            P.AP_destination.value = destPos
+                            P.AP_destination.name = destName
+                            self.click = false
+                            --windowsShow()
+                        end
+                    end
                 end
             end
             ::skip::
         end
-        for i, entry in ipairs(otherPOIS) do
-            pCx, pCy, pCz = convertToWorldCoordinates(entry.pos)
-            pName = entry.name[1]
-            pRadius = 50
-    
+
+        for i, v in ipairs(bookmarks) do
+            if bookmarks[i].id == 999 then
+                if FIVS == false then
+                    goto skip
+                else
+                    bookmarks[i].center = FIVS
+                    --DUSystem.print(IVS[1].."/"..IVS[2].."/"..IVS[3].."/"..ivsD)
+                end
+            elseif bookmarks[i].id == 9999 then
+                if CIVS == false then
+                    goto skip
+                else
+                    bookmarks[i].center = CIVS
+                    --DUSystem.print(IVS[1].."/"..IVS[2].."/"..IVS[3].."/"..ivsD)
+                end
+            end
+        
+            if bookmarks[i].center ~= nil and #bookmarks[i].center == 3 then
+                pCx, pCy, pCz = bookmarks[i].center[1], bookmarks[i].center[2], bookmarks[i].center[3]
+            elseif bookmarks[i].pos ~= nil and string.sub(bookmarks[i].pos,1,6) == '::pos{' then
+                pCx, pCy, pCz = convertToWorldCoordinates(bookmarks[i].pos)
+            else
+                goto skip
+            end
             posX = pCx - camWPx
             posY = pCy - camWPy
             posZ = pCz - camWPz
             projection2D()
-            local fop = 1
-    
-            if sz < 1 and sPX > 0 and sPX < self.width and sPY > 0  and sPY < self.height and dist < 400000 and pIndex == entry.bodyId then
-                local size = atan(pRadius/2, dist) * (self.width / tan(rad(self.hFov * 0.5)))
-                if dist > Helios[pIndex].radius/2 then fop = 0.5 end
-                if dist > 500 then
-                SVGind = SVGind + 1
-                SVG[SVGind] = format('<circle cx=%.2f cy=%.2f r=%.2f stroke=%s stroke-width=%.f fill=%s fill-opacity="0.2"/>', sPX, sPY , size, BBC, 2, WC)
-                            ..format('<text x="%.2f" y="%.2f" style="fill:%s; stroke-width:none; text-anchor:middle; font-family:Play; fill-opacity:%.1f;">',sPX, sPY,WTC,fop)
-                            ..format('<tspan x="%.2f" dy="%.2f" font-size="%.1f">%s</tspan>', sPX, clamp((1 / dist) * size * 500000, 12, 25), clamp((1 / dist) * size * 500000, 12, 25), pName)
-                            ..format('<tspan x="%.2f" dy="%.2f" font-size="%.1f">%.1fkm</tspan></text>',sPX, clamp((1 / dist) * size * 250000, 8, 12), clamp((1 / dist) * size * 250000, 8, 12), dist / 1000)
+
+            if sz < 1 and sPX > 0 and sPX < self.width and sPY > 0  and sPY < self.height then
+                if dist >= 200000 then
+                    dist_str = format('%.2f SU', dist / 200000)
+                elseif dist >= 1000 then
+                    dist_str = format('%.1f km', dist / 1000)
+                else
+                    dist_str = format('%.0f m', dist)
                 end
+                local bmradius = bookmarks[i].radius ~= nil and bookmarks[i].radius or 1
+                local bmName = bookmarks[i].name and type(bookmarks[i].type) == "table" and bookmarks[i].name[1] or "missing name"
+                local destName = bmName
+                local destPos = {pCx, pCy, pCz}
+                local e_T = bookmarks[i].type and type(bookmarks[i].type) == "table" and bookmarks[i].type[1] or "bookmark"
+                --DUSystem.print(e_T)
+
+                local sF = 1.5
+                local fop = inspace == 0 and 1 or 0.4
+                if dist > currentPlanetRadius/2 then
+                    fop = 0.4
+                end
+
+                local bf = function() return function()
+                                        DUSystem.print('Detination locked on: '..destName)
+                                        DUSystem.setWaypoint('::pos{0,0,'..destPos[1]..','..destPos[2]..','..destPos[3]..'}')
+                                        P.AP_destination.value = destPos
+                                        P.AP_destination.name = destName
+                                        windowsShow()
+                                        end end
+
+                local bsize = 50
+                if abs(sPX - self.width/2) < bsize/2 and abs(sPY - self.height/2) < bsize/2 then
+                    fop = 1
+                    if self.click == true and (P.AP_destination.name == nil or P.AP_destination.name ~= nil and destName ~= P.AP_destination.name) then
+                        DUSystem.print('Detination locked on: '..destName)
+                        DUSystem.setWaypoint('::pos{0,0,'..destPos[1]..','..destPos[2]..','..destPos[3]..'}')
+                        P.AP_destination.value = destPos
+                        P.AP_destination.name = destName
+                        self.click = false
+                    end
+                end
+
+                if e_T == "Destination" then
+                    fop = 1
+                    SVGind = SVGind + 1
+                    SVG[SVGind] = format([[<polyline style="opacity:%.1f;fill:none;stroke:%s;stroke-width:%.2f;stroke-miterlimit:%.2f;" 
+                    points="%.1f,%.1f %.1f,%.1f %.1f,%.1f"/>]], fop, BBC, 2*sF, 1*sF, sPX-(10*sF), sPY+(10*sF), sPX-(20*sF), sPY+(20*sF), sPX-(50*sF), sPY+(20*sF))
+                    ..format([[<text text-anchor="end" alignment-baseline="hanging" x="%.1f" y="%.1f" style="fill-opacity:%.1f;font-size:%.2fpx;fill:%s">%s (%s)</text>]], sPX-(25*sF), sPY+(22*sF), fop, 11*sF, WTC, bmName, dist_str)
+                    bti = bti + 1
+                    self.buttons[bti] = {"", bf(), {name = bookmarks[i].name[1], class = 'separator', width = bsize, height = bsize, posX = sPX-bsize/2, posY = sPY-bsize/2}}
+                    SVGind = SVGind + 1
+                    SVG[SVGind] = format([[<circle style="opacity:%.1f;fill:none;stroke:%s;stroke-width:%.2f;stroke-miterlimit:%.2f;" cx="%.1f" cy="%.1f" r="%.1f" />]], fop, BBC, 2*sF, 1*sF, sPX, sPY, 10*sF)
+
+                elseif e_T == "SZ" then
+                    if inspace == 1 then
+                        fop = 1
+                        local szT = bmName
+                        if DUConstruct.isInPvPZone() == false then
+                            szT = szT:gsub("%Safe", "PVP")
+                        end
+                        SVGind = SVGind + 1
+                        SVG[SVGind] = format([[<polyline style="opacity:%.1f;fill:none;stroke:%s;stroke-width:%.2f;stroke-miterlimit:%.2f;" 
+                        points="%.1f,%.1f %.1f,%.1f %.1f,%.1f"/>]], fop, BBC, 2*sF, 1*sF, sPX+(10*sF), sPY+(10*sF), sPX+(20*sF), sPY+(20*sF), sPX+(50*sF), sPY+(20*sF))
+                        ..format([[<text text-anchor="start" alignment-baseline="hanging" x="%.1f" y="%.1f" style="fill-opacity:%.1f;font-size:%.2fpx;fill:%s">%s (%s)</text>]], sPX+(25*sF), sPY+(22*sF), fop, 11*sF, WTC, szT, dist_str)
+                        bti = bti + 1
+                        self.buttons[bti] = {"", bf(), {name = bookmarks[i].name[1], class = 'separator', width = bsize, height = bsize, posX = sPX-bsize/2, posY = sPY-bsize/2}}
+                        SVGind = SVGind + 1
+                        SVG[SVGind] = format([[<circle style="opacity:%.1f;fill:none;stroke:%s;stroke-width:%.2f;stroke-miterlimit:%.2f;" cx="%.1f" cy="%.1f" r="%.1f" />]], fop, BBC, 2*sF, 1*sF, sPX, sPY, 10*sF)
+                    end
+                else
+                    if (dist < currentPlanetRadius*5 and bookmarks[i].bodyId ~= 0 ) or (inspace == 1 and bookmarks[i].bodyId == 0 ) then
+                        local w = ""
+                        if bookmarks[i].warp ~= nil and bookmarks[i].warp == true then
+                            w = "(Warp Available)"
+                        end
+                        SVGind = SVGind + 1
+                        SVG[SVGind] = format([[<polyline style="opacity:%.1f;fill:none;stroke:%s;stroke-width:%.2f;stroke-miterlimit:%.2f;" 
+                        points="%.1f,%.1f %.1f,%.1f %.1f,%.1f"/>]], fop, BBC, 2*sF, 1*sF, sPX-(10*sF), sPY-(10*sF), sPX-(20*sF), sPY-(20*sF), sPX-(50*sF), sPY-(20*sF))
+                        ..format([[<text text-anchor="end" alignment-baseline="bottom" x="%.1f" y="%.1f" style="fill-opacity:%.1f;font-size:%.2fpx;fill:%s">%s (%s)</text>]], sPX-(25*sF), sPY-(22*sF), fop, 11*sF, WTC, bmName..w, dist_str)
+                        bti = bti + 1
+                        self.buttons[bti] = {"", bf(), {name = bookmarks[i].name[1], class = 'separator', width = bsize, height = bsize, posX = sPX-bsize/2, posY = sPY-bsize/2}}
+                        SVGind = SVGind + 1
+                        SVG[SVGind] = format([[<circle style="opacity:%.1f;fill:none;stroke:%s;stroke-width:%.2f;stroke-miterlimit:%.2f;" cx="%.1f" cy="%.1f" r="%.1f" />]], fop, BBC, 2*sF, 1*sF, sPX, sPY, 10*sF)
+                    end
+                end
+                --DUSystem.print(e_T)
             end
+            ::skip::
         end
         SVGind = SVGind + 1
-        SVG[SVGind] = '</svg>'
+        SVG[SVGind] = '</svg></div>'
+        --DUSystem.print(concat(SVG))
         return concat(SVG)
     end
     return ""
