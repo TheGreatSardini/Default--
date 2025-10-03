@@ -79,6 +79,8 @@ function WidgetsPlusPlusCustom.new(core, unit, DB, antigrav, warpdrive, shield, 
     self.atmoLockedDestination = {}
     self.input = false
     self.precision = 0
+    self.maxSpeed = 50000
+    self.maxSpeedIncrement = 1000
     
     self.buttons = {} -- list of buttons to be implemented in widget
     self.name = "TRAVELER+-" -- name of the widget
@@ -151,18 +153,19 @@ end
 function WidgetsPlusPlusCustom.loadData(self)
     local load = Data:getData("TRAVELER") ~= nil and Data:getData("TRAVELER") or nil
     if load then
-        self.stopDist = load.a
-        self.atmoTravel = load.b
-        self.altitudeHold = load.c
-        self.arrived = load.d
-        self.atmoLockedDestination = load.e
-        self.precision = load.f
+        self.stopDist = load.a or 0.25
+        self.atmoTravel = load.b or false
+        self.altitudeHold = load.c or 0
+        self.arrived = load.d or false
+        self.atmoLockedDestination = load.e or {}
+        self.precision = load.f or 0
+        self.maxSpeed = load.g or 50000
     end
 end
 --
 function WidgetsPlusPlusCustom.saveData(self)
     if Data then
-        local save = {a=self.stopDist, b=self.atmoTravel, c=self.altitudeHold, d=self.arrived, e=self.atmoLockedDestination, f=self.precision}
+        local save = {a=self.stopDist, b=self.atmoTravel, c=self.altitudeHold, d=self.arrived, e=self.atmoLockedDestination, f=self.precision, g=self.maxSpeed}
         Data:setData("TRAVELER",save)
     end
 end
@@ -403,6 +406,7 @@ function WidgetsPlusPlusCustom.flushOverRide(self) --replace the flush thrust
             return nil
         end
         --DUSystem.print(longitudinalSpeed.." / "..lateralSpeed.." / "..verticalSpeed.." / "..otAVx.." / "..otAVy.." / "..otAVz)
+        longitudinalSpeed = longitudinalSpeed <= self.maxSpeed and longitudinalSpeed or self.maxSpeed
         return longitudinalSpeed, lateralSpeed, verticalSpeed, otAVx, otAVy, otAVz
     else
         return nil
@@ -505,6 +509,18 @@ function WidgetsPlusPlusCustom.SVG_Update(self)
                 windowsShow()
             end end
             self.buttons[2] = {"LANDING PRECISION ADJUSTMENT: "..self.precision.."m", bf(), {name = "traveler precision", class = nil, width = 275, height = 25, posX = 0, posY = 150}}
+        else
+            bf = function() return function()
+                if mouseWheel == 0 then
+                    self.maxSpeedIncrement = self.maxSpeedIncrement == 1000 and 10000 or 1000
+                elseif mouseWheel > 0 then
+                    self.maxSpeed = self.maxSpeed + self.maxSpeedIncrement
+                elseif mouseWheel < 0 then
+                    self.maxSpeed = self.maxSpeed - self.maxSpeedIncrement > 0  and self.maxSpeed - self.maxSpeedIncrement or 0
+                end
+                windowsShow()
+            end end
+            self.buttons[2] = {"MAX SPEED: "..self.maxSpeed.."kmph (+-"..self.maxSpeedIncrement..")", bf(), {name = "traveler maxSpeed", class = nil, width = 275, height = 25, posX = 0, posY = 150}}
         end
     else
         self.buttons = {}

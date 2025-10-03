@@ -77,7 +77,7 @@ function WidgetsPlusPlusCustom.new(core, unit, DB, antigrav, warpdrive, shield, 
     self.buttons = {} -- list of buttons to be implemented in widget
 
     self.name = 'ULTIMATE RACING++' -- name of the widget
-    self.SVGSize = {x=275, y=345} -- size of the window to fit the svg, in pixels
+    self.SVGSize = {x=275, y=380} -- size of the window to fit the svg, in pixels
     self.pos = {x=200, y=250}
     self.class = 'widgetnopadding'  --class = "widgets" (only svg)/ class = "widgetnopadding" (default-- widget style)
     self.draggable = true  --allow widget to be dragged
@@ -86,6 +86,7 @@ function WidgetsPlusPlusCustom.new(core, unit, DB, antigrav, warpdrive, shield, 
     self.scalable = true
 
     self.active = false
+    self.minimized = false
 
     self.moveX = 0
     self.moveY = 0
@@ -96,6 +97,8 @@ function WidgetsPlusPlusCustom.new(core, unit, DB, antigrav, warpdrive, shield, 
     self.pitchLock = false
     self.sport = false
     self.autoBrake = false
+    self.altLock = false
+    self.lockedAlt = -1
 
     self.rollInput = 0
     self.pitchInput = 0
@@ -129,18 +132,19 @@ end
 function WidgetsPlusPlusCustom.loadData(self)
     local load = Data:getData("MCFlight") ~= nil and Data:getData("MCFlight") or nil
     if load then
-        self.rollLock = load.r
-        self.pitchLock = load.p
-        self.sport = load.s
-        self.autoBrake = load.au
-        self.active = load.a
-        self.invertInput = load.i
+        self.rollLock = load.r or self.rollLock
+        self.pitchLock = load.p or self.pitchLock
+        self.sport = load.s or self.sport
+        self.autoBrake = load.au or self.autoBrake
+        self.active = load.a or self.active
+        self.invertInput = load.i or self.invertInput
+        self.altLock = load.al or self.altLock
     end
 end
 --
 function WidgetsPlusPlusCustom.saveData(self)
     if Data then
-        local save = {a=self.active, r=self.rollLock, p=self.pitchLock, s=self.sport, au=self.autoBrake, i=self.invertInput}
+        local save = {a=self.active, r=self.rollLock, p=self.pitchLock, s=self.sport, au=self.autoBrake, i=self.invertInput, al=self.altLock}
         Data:setData("MCFlight",save)
     end
 end
@@ -314,8 +318,10 @@ function WidgetsPlusPlusCustom.onActionStop(self, action)
             self.moveX = 0
         elseif action == 'up' then
             self.moveZ = 0
+            if self.altLock == true then self.lockedAlt = alt windowsShow() end
         elseif action == 'down' then
             self.moveZ = 0
+            if self.altLock == true then self.lockedAlt = alt windowsShow() end
         elseif action == 'groundaltitudeup' then
             
         elseif action == 'groundaltitudedown' then
@@ -493,8 +499,8 @@ function WidgetsPlusPlusCustom.flushOverRide(self)
         if Nav:getMasterMode() ~= "CRUISE" then P.KP.flM.value = "CRUISE" Nav:setMasterMode("CRUISE") updateParams() end
         local longFactor = self.boost == 0 and Nav:getThrottleValue() or 50000
         local LS = self.moveY * longFactor
-        local lS = self.moveX * 50000
-        local vS = self.moveZ * 50000
+        local lS = self.moveX * 50 + self.moveX*self.boost*50000
+        local vS = self.moveZ * 50 + self.moveZ*self.boost*50000
         --rotations control
         local finalPitchInput = self.pitchLock == false and self.pitchInput + DUSystem.getControlDeviceForwardInput() or 0
         local finalRollInput = self.rollLock == false and self.rollInput + DUSystem.getControlDeviceYawInput() or 0
@@ -518,6 +524,9 @@ function WidgetsPlusPlusCustom.flushOverRide(self)
             tAVy = tAVy + pAVy
             tAVz = tAVz + pAVz
         end
+        if self.altLock ==  true and self.lockedAlt ~= -1 then
+            vS = self.moveZ == 0 and (self.lockedAlt - alt)*2 or vS
+        end
         --DUSystem.print(LS.." / "..lS.." / "..vS)
         return LS, lS, vS, tAVx, tAVy, tAVz
     else
@@ -535,97 +544,119 @@ local btX, btY, btS = 5, 50, 5
 function WidgetsPlusPlusCustom.SVG_Update(self)
     local WTC = P.MS.WTC.value
     local ind = 0
-    --active
+    self.buttons = {}
     local bf = function() return function()
-                        self.active =  not self.active
-                        DUSystem.print("Mouse control ultimate racing flight mode has been toggled: "..tostring(self.active))
-                        P.KP.moC.value = false
-                        P.KP.flM.value = "CRUISE"
-                        Nav:setMasterMode("CRUISE")
-                        -- if self.active == true then
-                            -- DUSystem.lockView(1)
-                        -- else
-                            -- DUSystem.lockView(0)
-                        -- end
-                        updateParams()
-                        windowsShow()
-                end end
-    local btText = "Mouse-Control Racing Mode ON:  ["..upper(tostring(self.active)).."]"
+                            self.minimized =  not self.minimized
+                            updateParams()
+                            windowsShow()
+                    end end
     ind = ind + 1
-    self.buttons[ind] = {btText, bf(), {name = "DM_button"..ind, class = nil, width = btW, height = btH, posX = btX, posY = btY + (btS + btH)*ind}}
-
-    --rollLock
-    bf = function() return function()
-                        self.rollLock = not self.rollLock
-                        windowsShow()
-                end end
-    btText = "Flat Roll Lock:  ["..upper(tostring(self.rollLock)).."]"
-    ind = ind + 1
-    self.buttons[ind] = {btText, bf(), {name = "DM_button"..ind, class = nil, width = btW, height = btH, posX = btX, posY = btY + (btS + btH)*ind}}
-
-    --pitchLock
-    bf = function() return function()
-                        self.pitchLock = not self.pitchLock
-                        windowsShow()
-                end end
-    btText = "Flat Pitch Lock:  ["..upper(tostring(self.pitchLock)).."]"
-    ind = ind + 1
-    self.buttons[ind] = {btText, bf(), {name = "DM_button"..ind, class = nil, width = btW, height = btH, posX = btX, posY = btY + (btS + btH)*ind}}
-
-    --sport
-    bf = function() return function()
-                        self.sport = not self.sport
-                        windowsShow()
-                end end
-    btText = "Give me ALWAYS FULL POWA yeah:  ["..upper(tostring(self.sport)).."]"
-    ind = ind + 1
-    self.buttons[ind] = {btText, bf(), {name = "DM_button"..ind, class = nil, width = btW, height = btH, posX = btX, posY = btY + (btS + btH)*ind}}
-
-    --autoBrake
-    bf = function() return function()
-                        self.autoBrake = not self.autoBrake
-                        windowsShow()
-                end end
-    btText = "Auto Brake uppon W key release:  ["..upper(tostring(self.autoBrake)).."]"
-    ind = ind + 1
-    self.buttons[ind] = {btText, bf(), {name = "DM_button"..ind, class = nil, width = btW, height = btH, posX = btX, posY = btY + (btS + btH)*ind}}
-
-    --QEAD invert
-    bf = function() return function()
-                        self.invertInput = not self.invertInput
-                        windowsShow()
-                end end
-    btText = "Strafe(QE) / Roll(AD) invert:  ["..upper(tostring(self.invertInput)).."]"
-    ind = ind + 1
-    self.buttons[ind] = {btText, bf(), {name = "DM_button"..ind, class = nil, width = btW, height = btH, posX = btX, posY = btY + (btS + btH)*ind}}
-
-    --inertia auto brake
-    bf = function() return function()
-                        P.AS.iAB.value = not P.AS.iAB.value
-                        windowsShow()
-                end end
-    btText = "Inertia Auto Brake:  ["..upper(tostring(P.AS.iAB.value)).."]"
-    ind = ind + 1
-    self.buttons[ind] = {btText, bf(), {name = "DM_button"..ind, class = nil, width = btW, height = btH, posX = btX, posY = btY + (btS + btH)*ind}}
-
-    --mouse lock
-    bf = function() return function()
-                        P.KP.moC.value = not P.KP.moC.value
-                        windowsShow()
-                        if P.KP.moC.value == true then
-                            
-                        else
-                            
-                        end
-                end end
-    btText = "Mouse control:  ["..upper(tostring(P.KP.moC.value)).."]"
-    ind = ind + 1
-    self.buttons[ind] = {btText, bf(), {name = "DM_button"..ind, class = nil, width = btW, height = btH, posX = btX, posY = btY + (btS + btH)*ind}}
+    self.buttons[ind] = {"-", bf(), {name = "DM_button"..ind, class = nil, width = 20, height = 15, posX = self.SVGSize.x-25, posY = 5}}
+    self.SVGSize.y = 115
+    --active
+    if self.minimized == false then
+        self.SVGSize.y = 380
+        bf = function() return function()
+                            self.active =  not self.active
+                            DUSystem.print("Mouse control ultimate racing flight mode has been toggled: "..tostring(self.active))
+                            P.KP.moC.value = false
+                            P.KP.flM.value = "CRUISE"
+                            Nav:setMasterMode("CRUISE")
+                            -- if self.active == true then
+                                -- DUSystem.lockView(1)
+                            -- else
+                                -- DUSystem.lockView(0)
+                            -- end
+                            updateParams()
+                            windowsShow()
+                    end end
+        local btText = "Mouse-Control Racing Mode ON:  ["..upper(tostring(self.active)).."]"
+        ind = ind + 1
+        self.buttons[ind] = {btText, bf(), {name = "DM_button"..ind, class = nil, width = btW, height = btH, posX = btX, posY = btY + (btS + btH)*ind}}
+    
+        --rollLock
+        bf = function() return function()
+                            self.rollLock = not self.rollLock
+                            windowsShow()
+                    end end
+        btText = "Flat Roll Lock:  ["..upper(tostring(self.rollLock)).."]"
+        ind = ind + 1
+        self.buttons[ind] = {btText, bf(), {name = "DM_button"..ind, class = nil, width = btW, height = btH, posX = btX, posY = btY + (btS + btH)*ind}}
+    
+        --pitchLock
+        bf = function() return function()
+                            self.pitchLock = not self.pitchLock
+                            windowsShow()
+                    end end
+        btText = "Flat Pitch Lock:  ["..upper(tostring(self.pitchLock)).."]"
+        ind = ind + 1
+        self.buttons[ind] = {btText, bf(), {name = "DM_button"..ind, class = nil, width = btW, height = btH, posX = btX, posY = btY + (btS + btH)*ind}}
+    
+        --sport
+        bf = function() return function()
+                            self.sport = not self.sport
+                            windowsShow()
+                    end end
+        btText = "Give me ALWAYS FULL POWA yeah:  ["..upper(tostring(self.sport)).."]"
+        ind = ind + 1
+        self.buttons[ind] = {btText, bf(), {name = "DM_button"..ind, class = nil, width = btW, height = btH, posX = btX, posY = btY + (btS + btH)*ind}}
+    
+        --autoBrake
+        bf = function() return function()
+                            self.autoBrake = not self.autoBrake
+                            windowsShow()
+                    end end
+        btText = "Auto Brake uppon W key release:  ["..upper(tostring(self.autoBrake)).."]"
+        ind = ind + 1
+        self.buttons[ind] = {btText, bf(), {name = "DM_button"..ind, class = nil, width = btW, height = btH, posX = btX, posY = btY + (btS + btH)*ind}}
+    
+        --QEAD invert
+        bf = function() return function()
+                            self.invertInput = not self.invertInput
+                            windowsShow()
+                    end end
+        btText = "Strafe(QE) / Roll(AD) invert:  ["..upper(tostring(self.invertInput)).."]"
+        ind = ind + 1
+        self.buttons[ind] = {btText, bf(), {name = "DM_button"..ind, class = nil, width = btW, height = btH, posX = btX, posY = btY + (btS + btH)*ind}}
+    
+        --inertia auto brake
+        bf = function() return function()
+                            P.AS.iAB.value = not P.AS.iAB.value
+                            windowsShow()
+                    end end
+        btText = "Inertia Auto Brake:  ["..upper(tostring(P.AS.iAB.value)).."]"
+        ind = ind + 1
+        self.buttons[ind] = {btText, bf(), {name = "DM_button"..ind, class = nil, width = btW, height = btH, posX = btX, posY = btY + (btS + btH)*ind}}
+    
+        --mouse lock
+        bf = function() return function()
+                            P.KP.moC.value = not P.KP.moC.value
+                            windowsShow()
+                            if P.KP.moC.value == true then
+                                
+                            else
+                                
+                            end
+                    end end
+        btText = "Mouse control:  ["..upper(tostring(P.KP.moC.value)).."]"
+        ind = ind + 1
+        self.buttons[ind] = {btText, bf(), {name = "DM_button"..ind, class = nil, width = btW, height = btH, posX = btX, posY = btY + (btS + btH)*ind}}
+        
+        --altitude lock
+        bf = function() return function()
+                            self.altLock = not self.altLock
+                            self.lockedAlt = alt
+                            windowsShow()
+                    end end
+        btText = "Altitude lock:  "..math.floor(self.lockedAlt).."m ["..upper(tostring(self.altLock)).."]"
+        ind = ind + 1
+        self.buttons[ind] = {btText, bf(), {name = "DM_button"..ind, class = nil, width = btW, height = btH, posX = btX, posY = btY + (btS + btH)*ind}}
+    end
 
     local SVG = [[
         <text x="5" y="5" font-size="15" text-anchor="start" font-family="]]..widget_font..[[" alignment-baseline="baseline" stroke-width="0" fill="]]..WTC..[[">Mouse-Control Ultimate Racing</text>
         <text x="5" y="32" font-size="18" text-anchor="start" font-family="]]..widget_font..[[" alignment-baseline="baseline" stroke-width="0" fill="]]..WTC..[[">Throttle: ]]..Nav:getThrottleValue()..[[kmph</text>
-        <text x="270" y="305" font-size="12" text-anchor="end" font-family="]]..widget_font..[[" alignment-baseline="baseline" stroke-width="0" fill="]]..WTC..[[">By Jeronimo</text>
+        <text x="270" y="70" font-size="12" text-anchor="end" font-family="]]..widget_font..[[" alignment-baseline="baseline" stroke-width="0" fill="]]..WTC..[[">By Jeronimo</text>
     ]]
     SVG = '<div><svg viewBox="0 0 '.. self.SVGSize.x ..' '.. self.SVGSize.y ..'">'..SVG..'</svg></div>'
     return SVG
